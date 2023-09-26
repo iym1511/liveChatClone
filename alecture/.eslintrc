@@ -1,0 +1,3 @@
+{ // prettier 가 추천하는 정렬
+  "extends" : ["plugin:prettier/recommended"]
+}
