@@ -16,18 +16,7 @@ export class ScopeManager implements eslint.Scope.ScopeManager {
 }
 
 export class Scope implements eslint.Scope.Scope {
-    type:
-        | "block"
-        | "catch"
-        | "class"
-        | "for"
-        | "function"
-        | "function-expression-name"
-        | "global"
-        | "module"
-        | "switch"
-        | "with"
-        | "TDZ";
+    type: "block" | "catch" | "class" | "for" | "function" | "function-expression-name" | "global" | "module" | "switch" | "with" | "TDZ";
     isStrict: boolean;
     upper: Scope | null;
     childScopes: Scope[];

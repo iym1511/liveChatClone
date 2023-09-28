@@ -19,7 +19,6 @@
       "@typings/*": ["typings/*"]
     }
   },
-  // 웹팩은 기본적으로 ts가 인식이 안되기때문에 설정
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs",
