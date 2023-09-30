@@ -13,7 +13,7 @@ const LogIn = () => {
     e.preventDefault();
     setLogInError(false);
     try {
-      const response = await axios.post(
+      await axios.post(
         '/api/users/login',
         {
           email,
