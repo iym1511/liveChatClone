@@ -3,8 +3,15 @@ import axios from 'axios';
 import React, { useCallback, useState } from 'react';
 import { Button, Error, Form, Header, Input, Label, LinkContainer, Success } from '../SignUp/styles';
 import { Link } from 'react-router-dom';
+import useSWR from 'swr'
+import fetcher from '@utils/fetcher';
 
 const LogIn = () => {
+  // local주소가 fetcher의 매게변수로 들어간다.
+  // mutate / 주기적으로 호출은 되지만 dedupingInterval 기간 내에는 캐시에서 불러옵니다.
+  const {data, error, mutate} = useSWR('http://localhost:3095/api/users', fetcher,{
+    dedupingInterval: 100000,
+  });
   const [logInError, setLogInError] = useState(false);
   const [email, onChangeEmail] = useInput('');
   const [password, onChangePassword] = useInput('');
@@ -19,10 +26,11 @@ const LogIn = () => {
           email,
           password,
         },
-        {
+        { // 로그인 요청 시 사용자의 인증 정보를 쿠키로 전송하기 위함 (서버는 로그인한 사용자에 대한 정보를 쿠키를 통해 받음)
           withCredentials: true,
         },
       );
+      mutate();
     } catch (err) {
       setLogInError(true);
     }
