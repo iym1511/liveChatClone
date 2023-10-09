@@ -1,5 +1,8 @@
 import axios from "axios";
 
+// 기존 방식은 프로미스 반환을 해주지 않아 데이터저장이 이루어 지지 않았음
+// const fetcher = (url:string) => axios.get(url).then((res) => res.data);
+
 const fetcher = async (url: string) => {
   try {
     const response = await axios.get(url, {

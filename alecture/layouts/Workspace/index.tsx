@@ -8,7 +8,7 @@ import { Header, ProfileImg, RightMenu } from "./style";
 const Workspace:FC = ({children}) => {
 
   const {data, error, mutate} = useSWR('http://localhost:3095/api/users', fetcher,{
-    dedupingInterval: 200, // 유지기간 2초동안에는 서버에 요청x 캐시된 것 사용. / 첫번째것만 요청
+    dedupingInterval: 2000, // 유지기간 2초동안에는 서버에 요청x 캐시된 것 사용. / 첫번째것만 요청
   });
   
   const onLogout = useCallback(() => {
@@ -16,7 +16,7 @@ const Workspace:FC = ({children}) => {
       withCredentials: true, // 쿠키 공유
     })
     .then((res)=>{
-      mutate(res.data, false); // 호출 : 로그아웃 / OPIMISTIC UI mutate 서버의 요청이 가기전에 화면에 표시 (인스타 ❤️, 페이스북 👍)
+      mutate(res.data); // 호출 : 로그아웃 / OPIMISTIC UI mutate 서버의 요청이 가기전에 화면에 표시 (인스타 ❤️, 페이스북 👍)
     })
   },[])
 
@@ -32,7 +32,7 @@ const Workspace:FC = ({children}) => {
       <Header>
         <RightMenu>
           <span>
-            {/* <ProfileImg src="" alt={data.nickname}/> */}
+            <ProfileImg src="" alt={data.nickname}/>
           </span>
         </RightMenu>
       </Header>
