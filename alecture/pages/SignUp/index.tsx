@@ -1,10 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import { Button, Error, Form, Header, Input, Label, LinkContainer, Success } from './styles';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import useInput from '@hooks/useInput';
 import axios from 'axios';
+import useSWR from 'swr';
+import fetcher from '@utils/fetcher';
 
 const SignUp = () => {
+  const {data, error, mutate} = useSWR('http://localhost:3095/api/users', fetcher);
+
   const [email, onChangeEmail, setEmail] = useInput('');
   const [nickname, onChangeNickname] = useInput('');
   const [password, setPassword] = useState('');
@@ -39,7 +43,7 @@ const SignUp = () => {
         setSignUpError(''); // 초기화를 해주는것이 좋음
         setSignUpSuccess(false);
         try {
-          const response = await axios.post('/api/users', {
+          const response = await axios.post('http://localhost:3095/api/users', {
             email,
             nickname,
             password,
@@ -55,6 +59,12 @@ const SignUp = () => {
     },
     [email, nickname, password, passwordCheck, mismatchError],
   );
+    console.log(data)
+
+    // 내 정보가 들어가면 channel 이동 workspace의 children으로 channel 컴포넌트가 존재
+    if(data) {
+      return <Redirect to="/workspace/channel" />
+    }
 
   return (
     <div id="container">
