@@ -81,7 +81,7 @@ export const Channels = styled.nav`
   vertical-align: top;
   & a {
     padding-left: 36px;
-    color: inherit;
+    color: inherit; // 부모 객체의 값을 물려받아 씀
     text-decoration: none;
     height: 28px;
     line-height: 28px;
