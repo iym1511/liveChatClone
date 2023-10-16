@@ -4,7 +4,7 @@ import React, {CSSProperties, FC, useCallback } from "react";
 // typescript 는 프롭 타입 지정 필수
 interface Props {
   show : boolean;
-  onCloseModal: () => void;
+  onCloseModal: (e:any) => void; // event가 있는 함수를 넘겨 줄 때 e 지정
   style: CSSProperties; // css Props
   closeButton?: boolean;
   children: React.ReactNode;
@@ -16,9 +16,11 @@ const Menu: FC<Props> = ({children, style, show, onCloseModal, closeButton}) => 
     e.stopPropagation();
   },[])
 
+  if (!show) return null;
+
   return (  
     <CreateMenu onClick={onCloseModal}>
-      <div  style={style} onClick={stopPropagation}>
+      <div style={style} onClick={stopPropagation}>
         {closeButton && <CloseModalButton onClick={onCloseModal}>&times;</CloseModalButton>}
         {children} 
       </div>
