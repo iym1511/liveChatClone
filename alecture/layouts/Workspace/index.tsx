@@ -1,6 +1,6 @@
 import fetcher from '@utils/fetcher';
 import axios from 'axios';
-import React, { FC, FormEvent, useCallback, useState } from 'react';
+import React, { FC, FormEvent, VFC, useCallback, useState } from 'react';
 import useSWR from 'swr';
 import { Link, Redirect, Route, Switch } from 'react-router-dom';
 import {
@@ -14,6 +14,7 @@ import {
   ProfileModal,
   RightMenu,
   WorkspaceButton,
+  WorkspaceModal,
   WorkspaceName,
   WorkspaceWrapper,
   Workspaces,
@@ -30,11 +31,14 @@ import { IUser } from '@typings/db';
 import Modal from '@components/Modal';
 import { Button, Input, Label } from '@pages/SignUp/styles';
 import useInput from '@hooks/useInput';
+import CreateChannelModal from '@components/CreateChannelModal';
 
-const Workspace: FC = () => {
+const Workspace: VFC = () => {
   // modal 토글 , Menu 토글
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCreateWorkspaceModal, setShowCreateWorkspaceModal] = useState(false);
+  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
 
   // input은 기왕이면 다른 컴포넌트로 빼는것이 좋다(랜더링 이슈)
   const [newWorkspace, onChangeNewWorkspace, setNewWorkspace] = useInput('');
@@ -91,7 +95,19 @@ const Workspace: FC = () => {
   },[newWorkspace, newUrl]);
 
   const onCloseModal = useCallback(() => {
-    setShowCreateWorkspaceModal((prev) => !prev);
+    setShowCreateWorkspaceModal(false);
+    setShowCreateChannelModal(false);
+  },[])
+
+
+  // 채널 만들기 모달
+  const toggleWorkspaceModal = useCallback(()=>{
+    setShowWorkspaceModal((prev) => !prev);
+  },[]);
+
+  // 채널 생성하기
+  const onClickAddChannel = useCallback(() => {
+    setShowCreateChannelModal(true);
   },[])
 
   // data가 없으면 로그인 화면으로
@@ -138,9 +154,18 @@ const Workspace: FC = () => {
         </Workspaces>
 
         <Channels>
-          <WorkspaceName>Sleact</WorkspaceName>
-          <MenuScroll>MenuScroll</MenuScroll>
+          <WorkspaceName onClick={toggleWorkspaceModal}>Sleact</WorkspaceName>
+          <MenuScroll>
+            <Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{top:95, left:80}}> 
+              <WorkspaceModal>
+                <h2>Sleact</h2>
+                <button onClick={onClickAddChannel}>채널 만들기</button>
+                <button onClick={onLogout}>로그아웃</button>
+              </WorkspaceModal>
+            </Menu>
+          </MenuScroll>
         </Channels>
+
         <Chats>
           <Switch>
             <Route path="/workspace/channel" component={Channel} />
@@ -162,7 +187,7 @@ const Workspace: FC = () => {
           <Button type="submit">생성하기</Button>
         </form>
       </Modal>
-
+      <CreateChannelModal show={showCreateChannelModal} onCloseModal={onCloseModal}/>
     </div>
   );
 };
