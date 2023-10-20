@@ -23,7 +23,7 @@ import {
 // 기본 프로필 랜덤 라이브러리
 import gravatar from 'gravatar';
 // 에러 처리 라이브러리
-import {toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import Channel from '@pages/Channel';
 import DirectMessage from '@pages/DirectMessage';
 import Menu from '@components/Menu';
@@ -44,16 +44,22 @@ const Workspace: VFC = () => {
   const [newWorkspace, onChangeNewWorkspace, setNewWorkspace] = useInput('');
   const [newUrl, onChangeNewUrl, setNewUrl] = useInput('');
 
-  const { workspace } = useParams<{workspace : string}>();
+  // 본인의 위치가 이딘지 알려줌
+  const { workspace } = useParams<{ workspace: string }>();
 
-  const { data: userData , error, mutate } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher, {
+  const {
+    data: userData,
+    error,
+    mutate,
+  } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher, {
     dedupingInterval: 2000, // 유지기간 2초동안에는 서버에 요청x 캐시된 것 사용. / 첫번째것만 요청
   });
 
-  const { data: channelData } = useSWR<IChannel[]>( 
+  const { data: channelData } = useSWR<IChannel[]>(
     // 로그인 했을때만 채널 가져옴
-    userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null, fetcher
-    );
+    userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
+    fetcher,
+  );
 
   const onLogout = useCallback(() => {
     axios
@@ -72,51 +78,59 @@ const Workspace: VFC = () => {
   }, []);
 
   // modal 토글
-  const onClickCreateWorkspace = useCallback(()=>{
+  const onClickCreateWorkspace = useCallback(() => {
     setShowCreateWorkspaceModal((prev) => !prev);
-  },[]);
+  }, []);
 
   // 워크스페이스 생성
-  const onCreateWorkspace = useCallback((e) => {
-    e.preventDefault();
-    // 필수값들 들어가 있는지 검사 (trim() : 띄어쓰기 막아줌)
-    if(!newWorkspace || !newWorkspace.trim()) return
-    if(!newUrl || !newUrl.trim()) return
+  const onCreateWorkspace = useCallback(
+    (e) => {
+      e.preventDefault();
+      // 필수값들 들어가 있는지 검사 (trim() : 띄어쓰기 막아줌)
+      if (!newWorkspace || !newWorkspace.trim()) return;
+      if (!newUrl || !newUrl.trim()) return;
 
-    axios.post('http://localhost:3095/api/workspaces', {
-      workspace : newWorkspace,
-      url : newUrl,
-    },{
-      withCredentials : true,
-    }).then((res) => {
-      // 워크스페이스 생성 후 초기화
-      mutate(res.data);
-      setShowCreateWorkspaceModal((prev) => !prev);
-      setNewWorkspace('');
-      setNewUrl('');
-    }).catch((error) => {
-      console.dir(error);
-      // 에러 처리 라이브러리
-      toast.error(error.response?.data, {position: 'bottom-center'});
-    })
-    
-  },[newWorkspace, newUrl]);
+      axios
+        .post(
+          'http://localhost:3095/api/workspaces',
+          {
+            workspace: newWorkspace,
+            url: newUrl,
+          },
+          {
+            withCredentials: true,
+          },
+        )
+        .then((res) => {
+          // 워크스페이스 생성 후 초기화
+          mutate(res.data);
+          setShowCreateWorkspaceModal((prev) => !prev);
+          setNewWorkspace('');
+          setNewUrl('');
+        })
+        .catch((error) => {
+          console.dir(error);
+          // 에러 처리 라이브러리
+          toast.error(error.response?.data, { position: 'bottom-center' });
+        });
+    },
+    [newWorkspace, newUrl],
+  );
 
   const onCloseModal = useCallback(() => {
     setShowCreateWorkspaceModal(false);
     setShowCreateChannelModal(false);
-  },[])
-
+  }, []);
 
   // 채널 만들기 모달
-  const toggleWorkspaceModal = useCallback(()=>{
+  const toggleWorkspaceModal = useCallback(() => {
     setShowWorkspaceModal((prev) => !prev);
-  },[]);
+  }, []);
 
   // 채널 생성하기
   const onClickAddChannel = useCallback(() => {
     setShowCreateChannelModal(true);
-  },[])
+  }, []);
 
   // data가 없으면 로그인 화면으로
   if (!userData) {
@@ -126,7 +140,6 @@ const Workspace: VFC = () => {
   return (
     <div>
       <Header>
-
         <RightMenu>
           <span onClick={onClickUserProfile}>
             <ProfileImg src={gravatar.url(userData.email, { s: '28px', d: 'retro' })} alt={userData.nickname} />
@@ -135,8 +148,8 @@ const Workspace: VFC = () => {
                 <ProfileModal>
                   <img src={gravatar.url(userData.email, { s: '36px', d: 'retro' })} alt={userData.nickname} />
                   <div>
-                    <span id='profile-name'>{userData.nickname}</span>
-                    <span id='profile-active'>Active</span>
+                    <span id="profile-name">{userData.nickname}</span>
+                    <span id="profile-active">Active</span>
                   </div>
                 </ProfileModal>
                 <LogOutButton onClick={onLogout}>로그아웃</LogOutButton>
@@ -144,18 +157,18 @@ const Workspace: VFC = () => {
             )}
           </span>
         </RightMenu>
-
       </Header>
 
       <WorkspaceWrapper>
         <Workspaces>
-          { // 워크스페이스 list 출력
+          {
+            // 워크스페이스 list 출력
             userData?.Workspaces?.map((a) => {
               return (
                 <Link key={a.id} to={`/workspace/${123}/channel/a`}>
                   <WorkspaceButton>{a.name.slice(0, 1).toUpperCase()}</WorkspaceButton>
                 </Link>
-              )
+              );
             })
           }
           <AddButton onClick={onClickCreateWorkspace}>+</AddButton>
@@ -164,13 +177,14 @@ const Workspace: VFC = () => {
         <Channels>
           <WorkspaceName onClick={toggleWorkspaceModal}>Sleact</WorkspaceName>
           <MenuScroll>
-            <Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{top:95, left:80}}> 
+            <Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{ top: 95, left: 80 }}>
               <WorkspaceModal>
                 <h2>Sleact</h2>
                 <button onClick={onClickAddChannel}>채널 만들기</button>
                 <button onClick={onLogout}>로그아웃</button>
               </WorkspaceModal>
             </Menu>
+            {/* 채널 서버 생성 */}
             {channelData?.map((a) => (
               <div>{a.name}</div>
             ))}
@@ -198,7 +212,11 @@ const Workspace: VFC = () => {
           <Button type="submit">생성하기</Button>
         </form>
       </Modal>
-      <CreateChannelModal show={showCreateChannelModal} onCloseModal={onCloseModal} setShowCreateChannelModal={setShowCreateChannelModal}/>
+      <CreateChannelModal
+        show={showCreateChannelModal}
+        onCloseModal={onCloseModal}
+        setShowCreateChannelModal={setShowCreateChannelModal}
+      />
     </div>
   );
 };

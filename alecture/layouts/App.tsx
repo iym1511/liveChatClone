@@ -20,6 +20,8 @@ const App = () => {
       <Route path="/signup" component={SignUp}/>
       // Workspace 안에서 switch route를 사용
       // Workspace 의 주소를 포함해야 안에서도 사용가능
+      {/* 파라미터가 있고 파라미터가 아닌 값이 있으면 파라미터가 아닌것을 위로 보내줘야함 */}
+      {/* <Route path="/workspace/sleact" component={Workspace}/> */}
       <Route path="/workspace/:workspace" component={Workspace}/>
     </Switch>
   );
