@@ -19,8 +19,10 @@ interface Props {
 // 서로 관련있는 데이터들이 가까워져서 유지보수가 편함
 // VFC : Children이 없으면 사용
 const CreateChannelModal:VFC<Props> = ({show, onCloseModal, setShowCreateChannelModal}) => {
+  // 채널명 
   const [newChannel, onChangeNewChannel, setNewChannel] = useInput('');
-  const { workspace } = useParams<{workspace : string, channel : string}>();
+
+  const { workspace } = useParams<{workspace : string}>();
 
   const { data: userData , error, mutate } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher, {
     dedupingInterval: 2000, // 유지기간 2초동안에는 서버에 요청x 캐시된 것 사용. / 첫번째것만 요청
