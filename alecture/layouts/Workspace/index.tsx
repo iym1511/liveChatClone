@@ -150,7 +150,7 @@ const Workspace: VFC = () => {
       <WorkspaceWrapper>
         <Workspaces>
           { // 워크스페이스 list 출력
-            userData && userData?.Workspaces?.map((a) => {
+            userData?.Workspaces?.map((a) => {
               return (
                 <Link key={a.id} to={`/workspace/${123}/channel/a`}>
                   <WorkspaceButton>{a.name.slice(0, 1).toUpperCase()}</WorkspaceButton>
