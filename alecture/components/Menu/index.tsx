@@ -15,7 +15,7 @@ const Menu: FC<Props> = ({children, style, show, onCloseModal, closeButton}) => 
     // 클릭이 부모테그에선 먹히지않고 본인만 적용
     e.stopPropagation();
   },[])
-
+  
   if (!show) return null;
 
   return (  

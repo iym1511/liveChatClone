@@ -40,14 +40,13 @@ const LogIn:VFC = () => {
     [email, password],
   );
 
-  console.log(data);
   if (data === undefined) {
     return <div>로딩중...</div>;
   }
 
   // 내 정보가 들어가면 channel 이동 workspace의 children으로 channel 컴포넌트가 존재
   if(data) {
-    return <Redirect to="/workspace/channel" />
+    return <Redirect to="/workspace/sleact/channel/일반" />;
   }
 
   return (

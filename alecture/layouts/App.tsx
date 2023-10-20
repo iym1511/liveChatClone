@@ -20,7 +20,7 @@ const App = () => {
       <Route path="/signup" component={SignUp}/>
       // Workspace 안에서 switch route를 사용
       // Workspace 의 주소를 포함해야 안에서도 사용가능
-      <Route path="/workspace" component={Workspace}/>
+      <Route path="/workspace/:workspace" component={Workspace}/>
     </Switch>
   );
 };
