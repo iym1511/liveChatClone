@@ -16,10 +16,11 @@ interface Props {
 }
 const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChannelModal }) => {
   const { workspace, channel } = useParams<{ workspace: string; channel: string }>();
+
   const [newMember, onChangeNewMember, setNewMember] = useInput('');
   const { data: userData } = useSWR<IUser>('/api/users', fetcher);
-  const { mutate: revalidateMembers } = useSWR<IUser[]>(
-    userData ? `/api/workspaces/${workspace}/channels/${channel}/members` : null,
+  const { mutate: mutateMembers } = useSWR<IUser[]>(
+    channel ? `http://localhost:3095/api/workspaces/${workspace}/channels/${channel}/members` : null,
     fetcher,
   );
 
@@ -30,11 +31,11 @@ const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChanne
         return;
       }
       axios
-        .post(`/api/workspaces/${workspace}/channels/${channel}/members`, {
+        .post(`http://localhost:3095/api/workspaces/${workspace}/channels/${channel}/members`, {
           email: newMember,
         })
-        .then(() => {
-          revalidateMembers();
+        .then((res) => {
+          mutateMembers(res.data, false);
           setShowInviteChannelModal(false);
           setNewMember('');
         })
@@ -43,7 +44,7 @@ const InviteChannelModal: FC<Props> = ({ show, onCloseModal, setShowInviteChanne
           toast.error(error.response?.data, { position: 'bottom-center' });
         });
     },
-    [channel, newMember, revalidateMembers, setNewMember, setShowInviteChannelModal, workspace],
+    [newMember],
   );
 
   return (
