@@ -34,6 +34,7 @@ import useInput from '@hooks/useInput';
 import CreateChannelModal from '@components/CreateChannelModal';
 import InviteWorkspaceModal from '@components/InviteWorkspaceModal';
 import InviteChannelModal from '@components/InviteChannelModal';
+import DMList from '@components/DMList';
 
 const Workspace: VFC = () => {
   // modal 토글 , Menu 토글
@@ -62,6 +63,12 @@ const Workspace: VFC = () => {
   const { data: channelData } = useSWR<IChannel[]>(
     // 로그인 했을때만 채널 가져옴
     userData ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null,
+    fetcher,
+  );
+
+  // 맴버 데이터
+  const { data: memberData } = useSWR<IUser[]>(
+    userData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
     fetcher,
   );
 
@@ -197,14 +204,17 @@ const Workspace: VFC = () => {
               </WorkspaceModal>
             </Menu>
             {/* 채널 서버 생성 */}
-            {channelData?.map((a) => (
+            {/* {channelData?.map((a) => (
               <div>{a.name}</div>
-            ))}
+            ))} */}
+            {/* <ChannelList userData={userData}/> */}
+            <DMList />
           </MenuScroll>
         </Channels>
 
         <Chats>
           <Switch>
+            {/* 로그인,회원가입할때 ReDirect로 넘어온 주소와 해당 주소로 넘어갔을때 아래의 컴포넌트를 보여줌*/}
             <Route path="/workspace/:workspace/channel:channel" component={Channel} />
             <Route path="/workspace/:workspace/dm/:id" component={DirectMessage} />
           </Switch>
