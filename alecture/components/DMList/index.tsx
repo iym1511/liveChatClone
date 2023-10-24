@@ -5,13 +5,14 @@ import { IUser, IUserWithOnline } from '@typings/db';
 import fetcher from '@utils/fetcher';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { NavLink } from 'react-router-dom';
+
 import useSWR from 'swr';
 import { CollapseButton } from '@components/DMList/styles';
+import { NavLink } from 'react-router-dom';
 
 const DMList: FC = () => {
-  const { workspace } = useParams<{ workspace?: string }>(); // sleact
-  const { data: userData, error, mutate } = useSWR<IUser>('/api/users', fetcher, {
+  const { workspace } = useParams<{ workspace?: string }>();
+  const { data: userData, error, mutate } = useSWR<IUser>('http://localhost:3095/api/users', fetcher, {
     dedupingInterval: 2000, // 2초
   });
 
