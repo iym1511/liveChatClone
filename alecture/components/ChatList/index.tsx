@@ -1,6 +1,5 @@
 import { ChatZone, Section } from "./style";
-import React
- from "react";
+import React from "react";
 const ChatList = () => {
   return (  
     <div>
