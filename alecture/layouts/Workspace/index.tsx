@@ -35,6 +35,7 @@ import CreateChannelModal from '@components/CreateChannelModal';
 import InviteWorkspaceModal from '@components/InviteWorkspaceModal';
 import InviteChannelModal from '@components/InviteChannelModal';
 import DMList from '@components/DMList';
+import ChannelList from '@components/ChannelList';
 
 const Workspace: VFC = () => {
   // modal 토글 , Menu 토글
@@ -199,15 +200,13 @@ const Workspace: VFC = () => {
             <Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{ top: 95, left: 80 }}>
               <WorkspaceModal>
                 <h2>Sleact</h2>
+                <button onClick={onClickInviteWorkspace}>워크스페이스에 사용자 초대</button>
                 <button onClick={onClickAddChannel}>채널 만들기</button>
                 <button onClick={onLogout}>로그아웃</button>
               </WorkspaceModal>
             </Menu>
-            {/* 채널 서버 생성 */}
-            {/* {channelData?.map((a) => (
-              <div>{a.name}</div>
-            ))} */}
-            {/* <ChannelList userData={userData}/> */}
+            {/* 채널,Dm 서버 생성 swr을 사용하기때문에 데이터를 props로 안넘겨줘도됨*/}
+            <ChannelList />
             <DMList />
           </MenuScroll>
         </Channels>
