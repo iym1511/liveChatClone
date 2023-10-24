@@ -11,5 +11,5 @@ const ChatList = () => {
     </div>
   );
 }
- 
+
 export default ChatList;
