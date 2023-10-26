@@ -1,21 +1,40 @@
-import React, { VFC, useCallback } from "react";
+import React, { VFC, useCallback, useEffect, useRef } from "react";
 import { ChatArea, EachMention, Form, MentionsTextarea, SendButton, Toolbox } from '@components/ChatBox/style';
+import autosize from 'autosize';
 
 interface Props {
   chat : string;
+  onSubmitForm: (e: any) => void;
+  onChangeChat: (e: any) => void;
+  placeholder?: string;
 }
 
-const ChatBox:VFC<Props> = ({chat}) => {
-  const onSubmitForm = useCallback(()=> {
+// 재사용 되더라도 공통되는 데이터는 여기서 hook으로 가져와도되고 재사용되는데 서로 다른 데이터는 props로 처리
+const ChatBox:VFC<Props> = ({chat, onSubmitForm, onChangeChat, placeholder}) => {
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // shft + enter 시 줄바꿈하면서 창 크기 커지는 라이브러리 사용
+  useEffect(()=>{
+    if(textareaRef.current){
+      autosize(textareaRef.current);
+    }
+  },[])
+
+  // keydown 발생 시 작동되는 함수
+  const onKeydownChat = useCallback((e)=>{
+    if(e.key == 'Enter'){
+      if(!e.shiftKey){
+        e.preventDefault();
+        onSubmitForm(e);
+      }
+    }
   },[]);
 
   return (  
     <ChatArea>
-      <Form>
-        <MentionsTextarea>
-          <textarea></textarea>
-        </MentionsTextarea>
+      <Form onSubmit={onSubmitForm}>
+        <MentionsTextarea id="editor-chat" value={chat} onChange={onChangeChat} onKeyDown={onKeydownChat} placeholder={placeholder} ref={textareaRef}/>
         <Toolbox>
         <SendButton
             className={
