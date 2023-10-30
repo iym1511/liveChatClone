@@ -29,7 +29,7 @@ const ChatBox:VFC<Props> = ({chat, onSubmitForm, onChangeChat, placeholder}) => 
         onSubmitForm(e);
       }
     }
-  },[]);
+  },[onSubmitForm]); // props로 받은것들은 왠만하면 넣기
 
   return (  
     <ChatArea>

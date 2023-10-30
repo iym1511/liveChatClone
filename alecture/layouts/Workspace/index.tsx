@@ -1,6 +1,6 @@
 import fetcher from '@utils/fetcher';
 import axios from 'axios';
-import React, { FC, FormEvent, VFC, useCallback, useState } from 'react';
+import React, { FC, FormEvent, VFC, useCallback, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { Link, Redirect, Route, Switch, useParams } from 'react-router-dom';
 import {
@@ -36,6 +36,7 @@ import InviteWorkspaceModal from '@components/InviteWorkspaceModal';
 import InviteChannelModal from '@components/InviteChannelModal';
 import DMList from '@components/DMList';
 import ChannelList from '@components/ChannelList';
+import { disconnect } from 'process';
 
 const Workspace: VFC = () => {
   // modal 토글 , Menu 토글
@@ -73,15 +74,21 @@ const Workspace: VFC = () => {
     fetcher,
   );
 
+  // useEffect(()=>{
+  //   return () => {
+  //     disconnect();
+  //   }
+  // },[workspace, disconnect]);
+
   const onLogout = useCallback(() => {
     axios
       .post('http://localhost:3095/api/users/logout', null, {
         withCredentials: true, // 쿠키 공유
       })
       .then((res) => {
-        mutate(res.data); // 호출 : 로그아웃 / OPIMISTIC UI mutate 서버의 요청이 가기전에 화면에 표시 (인스타 ❤️, 페이스북 👍)
+        mutate(false, false); // 호출 : 로그아웃 / OPIMISTIC UI mutate 서버의 요청이 가기전에 화면에 표시 (인스타 ❤️, 페이스북 👍)
       });
-  }, []);
+  }, [mutate]);
 
   // Menu 토글
   const onClickUserProfile = useCallback((e) => {
@@ -185,7 +192,7 @@ const Workspace: VFC = () => {
             // 워크스페이스 list 출력
             userData?.Workspaces?.map((a) => {
               return (
-                <Link key={a.id} to={`/workspace/${123}/channel/a`}>
+                <Link key={a.id} to={`/workspace/${a.url}/channel/일반`}>
                   <WorkspaceButton>{a.name.slice(0, 1).toUpperCase()}</WorkspaceButton>
                 </Link>
               );

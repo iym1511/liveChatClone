@@ -2,13 +2,14 @@ import React, { useCallback } from "react";
 
 import gravator from 'gravatar';
 import useSWR from "swr";
-import { IUser } from "@typings/db";
+import { IDM, IUser } from "@typings/db";
 import fetcher from "@utils/fetcher";
 import { useParams } from "react-router";
 import ChatBox from "@components/ChatBox";
 import { Container, Header } from "@pages/DirectMessage/style";
 import ChatList from "@components/ChatList";
 import useInput from "@hooks/useInput";
+import axios from "axios";
 
 const DirectMessage = () => {
   const { workspace, id } = useParams<{workspace : string, id : string}>();
@@ -17,11 +18,30 @@ const DirectMessage = () => {
   const { data: myData } = useSWR(`http://localhost:3095/api/users`, fetcher);
   const [chat, onChangeChat,setChat] = useInput('');
 
+  // 채팅 받아오는곳
+  const {data: chatData, mutate:mutateChat} = useSWR<IDM[]>( 
+  `http://localhost:3095/api/workspaces/${workspace}/dms/${id}/chats?perPage=20&page=1`,
+  fetcher,
+  );
+
   const onSubmitForm = useCallback((e)=> {
     e.preventDefault();
-    setChat('');
-    console.log('asd');
-  },[])
+    console.log(chat)
+    if(chat?.trim()){
+      axios.post(`http://localhost:3095/api/workspaces/${workspace}/dms/${id}/chats`,{
+        content: chat,
+      },{
+          withCredentials: true,
+      })
+      .then((res)=>{
+        mutateChat(res.data);
+        setChat(''); // 버튼클릭 시 기존 채팅지우기
+      })
+      .catch(()=>{
+        console.error
+      })
+    }
+  },[chat])
 
   // 로딩
   if(!userData || !myData){

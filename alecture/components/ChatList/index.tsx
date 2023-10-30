@@ -1,4 +1,4 @@
-import { ChatZone, Section } from "./style";
+import { ChatZone, Section } from "@components/ChatList/style";
 import React from "react";
 const ChatList = () => {
   return (  
