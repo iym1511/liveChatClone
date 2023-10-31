@@ -37,6 +37,7 @@ import InviteChannelModal from '@components/InviteChannelModal';
 import DMList from '@components/DMList';
 import ChannelList from '@components/ChannelList';
 import { disconnect } from 'process';
+import useSocket from '@hooks/useSocket';
 
 const Workspace: VFC = () => {
   // modal 토글 , Menu 토글
@@ -74,10 +75,12 @@ const Workspace: VFC = () => {
     fetcher,
   );
 
+  const [socket, disconnect ] = useSocket(workspace);
+
   // useEffect(()=>{
-  //   return () => {
-  //     disconnect();
-  //   }
+  //   socket.on('message');
+  //   socket.emit();
+  //   disconnect();
   // },[workspace, disconnect]);
 
   const onLogout = useCallback(() => {
