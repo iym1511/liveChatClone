@@ -9,9 +9,13 @@ import { useParams } from 'react-router';
 import useSWR from 'swr';
 import { CollapseButton } from '@components/DMList/styles';
 import { NavLink } from 'react-router-dom';
+import useSocket from '@hooks/useSocket';
 
 const DMList: FC = () => {
+
   const { workspace } = useParams<{ workspace?: string }>();
+  const [socket] = useSocket(workspace);
+
   const { data: userData, error, mutate } = useSWR<IUser>('http://localhost:3095/api/users', fetcher, {
     dedupingInterval: 2000, // 2초
   });
@@ -34,18 +38,19 @@ const DMList: FC = () => {
     setOnlineList([]);
   }, [workspace]);
 
-  // useEffect(() => {
-  //   socket?.on('onlineList', (data: number[]) => {
-  //     setOnlineList(data);
-  //   });
-  //   // socket?.on('dm', onMessage);
-  //   // console.log('socket on dm', socket?.hasListeners('dm'), socket);
-  //   return () => {
-  //     // socket?.off('dm', onMessage);
-  //     // console.log('socket off dm', socket?.hasListeners('dm'));
-  //     socket?.off('onlineList');
-  //   };
-  // }, [socket]);
+  useEffect(() => {
+    // 서버에 누가 들어왔는지 확인
+    socket?.on('onlineList', (data: number[]) => {
+      setOnlineList(data);
+    });
+    // socket?.on('dm', onMessage);
+    // console.log('socket on dm', socket?.hasListeners('dm'), socket);
+    return () => {
+      // socket?.off('dm', onMessage);
+      // console.log('socket off dm', socket?.hasListeners('dm'));
+      socket?.off('onlineList');
+    };
+  }, [socket]);
 
   return (
     <>
@@ -66,6 +71,7 @@ const DMList: FC = () => {
             return (
               // NavLink 는 activeClassName에 selected를 주어 클릭시 하이라이트를 편하게 줄 수 있다.
               <NavLink key={member.id} activeClassName="selected" to={`/workspace/${workspace}/dm/${member.id}`}>
+                 {/* Online일때 빈 아이콘이 초록색으로 변경됨 */}
                 <i
                   className={`c-icon p-channel_sidebar__presence_icon p-channel_sidebar__presence_icon--dim_enabled c-presence ${
                     isOnline ? 'c-presence--active c-icon--presence-online' : 'c-icon--presence-offline'

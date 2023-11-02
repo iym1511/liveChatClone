@@ -6,8 +6,8 @@ const sockets: {[key: string]: SocketIOClient.Socket} = {};
 
 const backUrl = "http://localhost:3095";
 
-const useSocket = (workspace?: string) =>{
-
+const useSocket = (workspace?: string): [SocketIOClient.Socket | undefined, () => void] => {
+  console.log('rerender', workspace);
   const disconnect  = useCallback(() => {
     if(workspace) {
       sockets[workspace].disconnect();
@@ -20,7 +20,15 @@ const useSocket = (workspace?: string) =>{
       // 한번 맺었던 연결을 끊는 함수 (끝맺음을 잘하자)
     return [undefined, disconnect];
   }
-  sockets[workspace] = io.connect(`${backUrl}/ws-${workspace}`);
+
+  // 기존에 없었으면 만듦
+  if(!sockets[workspace]){
+    sockets[workspace] = io.connect(`${backUrl}/ws-${workspace}`, {
+      // 연결을 할 때 폴링하지말고 웹 소켓만 사용
+      transports : ['websocket'],
+    })
+  }
+  
 
   // // 서버에 hello 라는 이벤트 명 으로 world라는 데이터를 보냄
   // sockets[workspace].emit('hello','world');
