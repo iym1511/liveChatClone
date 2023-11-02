@@ -34,7 +34,7 @@ const DirectMessage = () => {
           withCredentials: true,
       })
       .then((res)=>{
-        mutateChat(res.data);
+        mutateChat();
         setChat(''); // 버튼클릭 시 기존 채팅지우기
       })
       .catch(()=>{
@@ -56,7 +56,7 @@ const DirectMessage = () => {
         <span>{userData.nickname}</span>
       </Header>
       {/* 컴포넌트 위치를 미리 지정해도 좋다. */}
-      <ChatList />
+      <ChatList chatData={chatData}/>
       <ChatBox chat={chat} onChangeChat={onChangeChat} onSubmitForm={onSubmitForm}/>
     </Container>
   );
