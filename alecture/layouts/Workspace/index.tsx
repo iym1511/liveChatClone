@@ -232,7 +232,7 @@ const Workspace: VFC = () => {
         <Chats>
           <Switch>
             {/* 로그인,회원가입할때 ReDirect로 넘어온 주소와 해당 주소로 넘어갔을때 아래의 컴포넌트를 보여줌*/}
-            <Route path="/workspace/:workspace/channel:channel" component={Channel} />
+            <Route path="/workspace/:workspace/channel/:channel" component={Channel} />
             <Route path="/workspace/:workspace/dm/:id" component={DirectMessage} />
           </Switch>
         </Chats>

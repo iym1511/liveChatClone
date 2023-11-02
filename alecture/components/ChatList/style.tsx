@@ -4,7 +4,7 @@ export const ChatZone = styled.div`
   width: 100%;
   display: flex;
   flex: 1;
-`;
+  `;
 
 export const Section = styled.section`
   margin-top: 20px;
