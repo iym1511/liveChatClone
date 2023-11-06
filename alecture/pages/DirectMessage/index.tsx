@@ -33,8 +33,8 @@ const DirectMessage = () => {
       },{
           withCredentials: true,
       })
-      .then((res)=>{
-        mutateChat();
+      .then(()=>{
+        mutateChat(); //  SWR에서 데이터를 다시 불러와서 캐시를 갱신하는 역할을 합니다.
         setChat(''); // 버튼클릭 시 기존 채팅지우기
       })
       .catch(()=>{
@@ -56,6 +56,7 @@ const DirectMessage = () => {
         <span>{userData.nickname}</span>
       </Header>
       {/* 컴포넌트 위치를 미리 지정해도 좋다. */}
+      {/* 전역 상태관리 라이브러리를 사용해도 컴포넌트상황에따라 props 로내려줘도 됨*/}
       <ChatList chatData={chatData}/>
       <ChatBox chat={chat} onChangeChat={onChangeChat} onSubmitForm={onSubmitForm}/>
     </Container>
