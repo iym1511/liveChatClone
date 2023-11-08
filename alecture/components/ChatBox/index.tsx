@@ -18,7 +18,6 @@ interface Props {
 // 재사용 되더라도 공통되는 데이터는 여기서 hook으로 가져와도되고 재사용되는데 서로 다른 데이터는 props로 처리
 const ChatBox: VFC<Props> = ({ chat, onSubmitForm, onChangeChat, placeholder }) => {
   const { workspace } = useParams<{ workspace: string }>();
-
   const {
     data: userData,
     error,
@@ -26,15 +25,17 @@ const ChatBox: VFC<Props> = ({ chat, onSubmitForm, onChangeChat, placeholder }) 
   } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher, {
     dedupingInterval: 2000, // 유지기간 2초동안에는 서버에 요청x 캐시된 것 사용. / 첫번째것만 요청
   });
-
+  
   // 맴버 데이터
   const { data: memberData } = useSWR<IUser[]>(
     userData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
     fetcher,
-  );
+    );
+    
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  
   // shft + enter 시 줄바꿈하면서 창 크기 커지는 라이브러리 사용
   useEffect(() => {
     if (textareaRef.current) {
@@ -78,7 +79,7 @@ const ChatBox: VFC<Props> = ({ chat, onSubmitForm, onChangeChat, placeholder }) 
   return (
     <ChatArea>
       <Form onSubmit={onSubmitForm}>
-        
+        {/* @ 태그영역 */}
         <MentionsTextarea
           id="editor-chat"
           value={chat}
