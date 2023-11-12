@@ -15,11 +15,11 @@ const DMList: FC = () => {
 
   const { workspace } = useParams<{ workspace?: string }>();
   const [socket] = useSocket(workspace);
-
   const { data: userData, error, mutate } = useSWR<IUser>('http://localhost:3095/api/users', fetcher, {
     dedupingInterval: 2000, // 2초
   });
-
+  
+  console.log(workspace);
   const { data: memberData } = useSWR<IUserWithOnline[]>(
     userData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
     fetcher,
