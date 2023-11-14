@@ -1,7 +1,7 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import gravator from 'gravatar';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 // swr 인피니티스크롤링 전용 메서드
 import useSWRInfinite from 'swr/infinite';
 import { IDM, IUser } from '@typings/db';
@@ -47,7 +47,28 @@ const DirectMessage = () => {
     (e) => {
       e.preventDefault();
 
-      if (chat?.trim()) {
+      if (chat?.trim() && chatData) {
+        // 💡 옵티미스틱 UI
+        const savedChat = chat;
+        // 서버쪽에 다녀오지 않아도 성공해서 데이터가 있는거처럼 보이게 미리 만듦
+        mutateChat((prevChatData) => {
+          // infinite 스크롤링은 2차원 배열이다.
+          prevChatData?.[0].unshift({  // unshift : 앞쪽에 추가
+            id: (chatData[0][0]?.id || 0)  + 1,
+            content: savedChat,
+            SenderId: myData.id,
+            Sender: myData,
+            ReceiverId: userData.id,
+            Receiver: userData,
+            createdAt : new Date(),
+          });
+          return prevChatData;
+        },false) // 옵티미스틱 UI 할땐 이부분이 항상 false
+        .then(()=>{
+          setChat(''); // 버튼클릭 시 기존 채팅지우기
+          scrollbarRef.current?.scrollToBottom(); // 채팅 첬을때 맨 아래로
+        })
+
         axios
           .post(
             `http://localhost:3095/api/workspaces/${workspace}/dms/${id}/chats`,
@@ -60,18 +81,24 @@ const DirectMessage = () => {
           )
           .then(() => {
             mutateChat(); //  SWR에서 데이터를 다시 불러와서 캐시를 갱신하는 역할을 합니다.
-            setChat(''); // 버튼클릭 시 기존 채팅지우기
           })
           .catch(() => {
             console.error;
           });
       }
     },
-    [chat],
+    [chat, chatData, myData, userData, workspace, id],
   );
 
-  //     (채팅이 최신것을 아래에 두기 위함) = 기존것 데이터를두고 새 데이터를 뒤집어서 출력
+  //     (채팅이 최신것을 아래에 두기 위함) = 기존것 데이터를두고 새 데이터를 뒤집어서 출력 / flat() 배열을 1차원 배열로 만들어줌
   const chatSections = makeSection(chatData ? [...chatData].flat().reverse() : []);
+
+  // 로딩 시 스크롤바 제일 아래로
+  useEffect(()=>{
+    if(chatData?.length === 1){ // 채팅 데이터가 있어서 불러온 경우
+      scrollbarRef.current?.scrollToBottom(); // 가장 아래쪽으로 내려줌
+    }
+  },[chatData])
 
   // 로딩
   if (!userData || !myData) {
@@ -88,7 +115,7 @@ const DirectMessage = () => {
       {/* 전역 상태관리 라이브러리를 사용해도 컴포넌트상황에따라 props 로 넘겨줌*/}
       <ChatList
         chatSections={chatSections}
-        ref={scrollbarRef}
+        scrollRef={scrollbarRef}
         setSize={setSize}
         isEmpty={isEmpty}
         isReachingEnd={isReachingEnd}

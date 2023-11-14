@@ -1,31 +1,36 @@
 import Chat from '@components/Chat';
 import { ChatZone, Section, StickyHeader } from '@components/ChatList/style';
 import { IChat, IDM } from '@typings/db';
-import React, { VFC, forwardRef, useCallback, useRef } from 'react';
+import React, { FC, RefObject, VFC, forwardRef, useCallback, useEffect, useRef } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars';
 
 interface Props {
-  chatSections: { [key: string]: IDM[] };
-  setSize: (f: (index: number) => number) => Promise<IDM[][] | undefined>;
+  scrollRef: RefObject<Scrollbars>;
+  isReachingEnd?: boolean;
   isEmpty: boolean;
-  isReachingEnd: boolean;
+  chatSections: { [key: string]: (IDM)[] };
+  setSize: (f: (size: number) => number) => Promise<(IDM | IChat)[][] | undefined>;
 }
 
-const ChatList = forwardRef<Scrollbars, Props>(({ chatSections, setSize, isEmpty, isReachingEnd}, ref) => {
+const ChatList: FC<Props> = (({ chatSections, setSize, isEmpty, scrollRef, isReachingEnd}) => {
 
-  const onScroll = useCallback((value) => {
+  const onScroll = useCallback((values) => {
     // 끝에 도달하면 불러오지 않기
-    if(value.scrollTop === 0 && !isReachingEnd){
+    if(values.scrollTop === 0 && !isReachingEnd && !isEmpty){
       console.log('가장 위');
       setSize((prevSize) => prevSize + 1).then(()=>{
-        // 스크롤 위치 유지
+      // 스크롤 위치 유지
+      if(scrollRef?.current){
+          scrollRef.current?.scrollTop(scrollRef.current?.getScrollHeight() - values.scrollHeight);
+        }
       });
     }
   }, []);
 
+
   return (
     <ChatZone>
-      <Scrollbars autoHide ref={ref} onScrollFrame={onScroll}>
+      <Scrollbars autoHide ref={scrollRef} onScrollFrame={onScroll}>
         {Object.entries(chatSections).map(([date, chats]) => {
           return (
             <Section className={`section-${date}`} key={date}>
@@ -33,9 +38,7 @@ const ChatList = forwardRef<Scrollbars, Props>(({ chatSections, setSize, isEmpty
                 <button>{date}</button>
               </StickyHeader>
               {chats.map((chat) => (
-                <div>
-                  <Chat key={chat.id} data={chat} />
-                </div>
+                <Chat key={chat.id} data={chat} />
               ))}
             </Section>
           );
