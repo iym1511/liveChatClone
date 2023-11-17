@@ -151,7 +151,6 @@ const DirectMessage = () => {
     }
   }, [chatData]);
 
-  console.log(bottomRef);
 
   // 로딩
   if (!userData || !myData) {

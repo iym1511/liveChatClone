@@ -38,6 +38,7 @@ export const DragOver = styled.div`
 
 // 내가 만든 코드 상단에 있을때 하단 채팅 알림
 export const ChatAlert = styled.div`
+  margin: auto;
   cursor: pointer;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
