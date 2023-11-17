@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import gravator from 'gravatar';
 import useSWR, { mutate } from 'swr';
@@ -8,12 +8,13 @@ import { IDM, IUser } from '@typings/db';
 import fetcher from '@utils/fetcher';
 import { useParams } from 'react-router';
 import ChatBox from '@components/ChatBox';
-import { Container, Header } from '@pages/DirectMessage/style';
+import { ChatAlert, Container, Header } from '@pages/DirectMessage/style';
 import ChatList from '@components/ChatList';
 import useInput from '@hooks/useInput';
 import axios from 'axios';
 import makeSection from '@utils/makeSection';
 import Scrollbars from 'react-custom-scrollbars';
+import useSocket from '@hooks/useSocket';
 
 const DirectMessage = () => {
   const { workspace, id } = useParams<{ workspace: string; id: string }>();
@@ -21,11 +22,14 @@ const DirectMessage = () => {
   // 내정보
   const { data: myData } = useSWR(`http://localhost:3095/api/users`, fetcher);
   const [chat, onChangeChat, setChat] = useInput('');
+  const [chatAlert, setChatAlert] = useState(false);
+  const [socket] = useSocket(workspace);
 
   // 과거 채팅리스트에서 채팅을 치면 최신목록으로 바로 스크롤을 내려줄려면 ref를
   // 이 컴포넌트에서 props로 내려줘야하기 때문에 forwardRef를 사용해서 props로 넘겨준다
   // 💡 HTML 엘리먼트가 아닌 React 컴포넌트에서 ref prop을 사용하려면 React에서 제공하는 forwardRef()라는 함수를 사용해야 합니다
   const scrollbarRef = useRef<Scrollbars>(null);
+  const bottomRef = useRef(null);
 
   // 채팅 받아오는곳 (setSize : 페이지수를 바꿔줌)
   // useSWRInfinite를 쓰면 [{id:1},{id:2},{id:3},{id:4}] 1차원배열이 [[{id:1},{id:2}],[{id:3},{id:4}]] 2차원배열이 된다.
@@ -53,21 +57,22 @@ const DirectMessage = () => {
         // 서버쪽에 다녀오지 않아도 성공해서 데이터가 있는거처럼 보이게 미리 만듦
         mutateChat((prevChatData) => {
           // infinite 스크롤링은 2차원 배열이다.
-          prevChatData?.[0].unshift({  // unshift : 앞쪽에 추가
-            id: (chatData[0][0]?.id || 0)  + 1,
+          prevChatData?.[0].unshift({
+            // unshift : 앞쪽에 추가
+            id: (chatData[0][0]?.id || 0) + 1,
             content: savedChat,
             SenderId: myData.id,
             Sender: myData,
             ReceiverId: userData.id,
             Receiver: userData,
-            createdAt : new Date(),
+            createdAt: new Date(),
           });
           return prevChatData;
-        },false) // 옵티미스틱 UI 할땐 이부분이 항상 false
-        .then(()=>{
-          setChat(''); // 버튼클릭 시 기존 채팅지우기
-          scrollbarRef.current?.scrollToBottom(); // 채팅 첬을때 맨 아래로
-        })
+        }, false) // 옵티미스틱 UI 할땐 이부분이 항상 false
+          .then(() => {
+            setChat(''); // 버튼클릭 시 기존 채팅지우기
+            scrollbarRef.current?.scrollToBottom(); // 채팅 첬을때 맨 아래로
+          });
 
         axios
           .post(
@@ -93,12 +98,60 @@ const DirectMessage = () => {
   //     (채팅이 최신것을 아래에 두기 위함) = 기존것 데이터를두고 새 데이터를 뒤집어서 출력 / flat() 배열을 1차원 배열로 만들어줌
   const chatSections = makeSection(chatData ? [...chatData].flat().reverse() : []);
 
+  // DM 데이터 처리 (실시간으로 dm을 받는 암수)
+  const onMessage = useCallback(
+    (data: IDM) => {
+      // myData.id !== Number(id) 내 채팅이 아닌것의 조건을 빼버리면 내 메시지가 두번 출력되는 현상 발생
+      if (data.SenderId === Number(id) && myData.id !== Number(id)) {
+        mutateChat((chatData) => {
+          chatData?.[0].unshift(data); // 가장 최신 배열에 가장 최신으로 데이터를 넣기 unshift: 맨앞push
+          return chatData;
+        }, false).then(() => {
+          // 내가 스크롤바를 150px 이상 올렸을 때는 남이 채팅을 쳐도 스크롤바가 내려가지않음
+          // 150px 이하로 찔끔 올렸을때는 남이 채팅 첬을대 스크롤바가 내려감
+          if (scrollbarRef.current) {
+            if (
+              scrollbarRef.current.getScrollHeight() <
+              scrollbarRef.current.getClientHeight() + scrollbarRef.current.getScrollTop() + 150
+            ) {
+              console.log('scrollToBottom!', scrollbarRef.current?.getValues());
+              setTimeout(() => {
+                scrollbarRef.current?.scrollToBottom(); // 맨 아래로
+              }, 100);
+            } else {
+              console.log('채팅왔어!');
+              setChatAlert(true);
+            }
+          }
+        });
+      }
+    },
+    [id, myData, mutateChat],
+  );
+
+  const newChatClick = () => {
+    setChatAlert(false);
+    setTimeout(() => {
+      scrollbarRef.current?.scrollToBottom(); // 맨 아래로
+    }, 100);
+  };
+
+  useEffect(() => {
+    socket?.on('dm', onMessage);
+    return () => {
+      socket?.off('dm', onMessage);
+    };
+  }, [socket, onMessage]);
+
   // 로딩 시 스크롤바 제일 아래로
-  useEffect(()=>{
-    if(chatData?.length === 1){ // 채팅 데이터가 있어서 불러온 경우
+  useEffect(() => {
+    if (chatData?.length === 1) {
+      // 채팅 데이터가 있어서 불러온 경우
       scrollbarRef.current?.scrollToBottom(); // 가장 아래쪽으로 내려줌
     }
-  },[chatData])
+  }, [chatData]);
+
+  console.log(bottomRef);
 
   // 로딩
   if (!userData || !myData) {
@@ -119,7 +172,13 @@ const DirectMessage = () => {
         setSize={setSize}
         isEmpty={isEmpty}
         isReachingEnd={isReachingEnd}
+        setChatAlert={setChatAlert}
       />
+      {chatAlert && (
+        <ChatAlert onClick={newChatClick}>
+          새로운 채팅이 있습니다!
+        </ChatAlert>
+      )}
       <ChatBox chat={chat} onChangeChat={onChangeChat} onSubmitForm={onSubmitForm} />
     </Container>
   );

@@ -35,3 +35,17 @@ export const DragOver = styled.div`
   justify-content: center;
   font-size: 40px;
 `;
+
+// 내가 만든 코드 상단에 있을때 하단 채팅 알림
+export const ChatAlert = styled.div`
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  width: 180px;
+  height: 30px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+`;
