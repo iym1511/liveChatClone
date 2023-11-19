@@ -8,7 +8,7 @@ interface Props {
   scrollRef: RefObject<Scrollbars>;
   isReachingEnd?: boolean;
   isEmpty: boolean;
-  chatSections: { [key: string]: IDM[] };
+  chatSections: { [key: string]: (IDM | IChat)[] };
   setSize: (f: (size: number) => number) => Promise<(IDM | IChat)[][] | undefined>;
   setChatAlert: (e: boolean) => void 
 }
@@ -26,6 +26,7 @@ const ChatList: FC<Props> = ({ chatSections, setSize, isEmpty, scrollRef, isReac
       });
     } else {
       // 스크롤이 가장 아래쪽에 닿았을 때
+      // console.log(values.scrollTop, values.clientHeight ,values.scrollHeight)
       if (values.scrollTop + values.clientHeight >= values.scrollHeight) {
         // 원하는 동작을 수행
         setChatAlert(false);
