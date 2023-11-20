@@ -14,8 +14,8 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const config: Configuration = {
   name: 'sleact',
-  mode: isDevelopment ? 'development' : 'production',
-  devtool: !isDevelopment ? 'hidden-source-map' : 'eval',
+  mode: isDevelopment ? 'development' : 'production', // 
+  devtool: !isDevelopment ? 'hidden-source-map' : 'eval', // 배포모드 : 개발모드
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
     alias: {
@@ -92,9 +92,12 @@ const config: Configuration = {
 if (isDevelopment && config.plugins) {
   config.plugins.push(new webpack.HotModuleReplacementPlugin());
   config.plugins.push(new ReactRefreshWebpackPlugin());
-  config.plugins.push(new BundleAnalyzerPlugin({analyzerMode:'server', openAnalyzer:true}))
+  // config.plugins.push(new BundleAnalyzerPlugin({analyzerMode:'server', openAnalyzer:true}))
 }
+
 if (!isDevelopment && config.plugins) {
+  config.plugins.push(new webpack.LoaderOptionsPlugin({minimize: true})); // 최적화용
+  config.plugins.push(new BundleAnalyzerPlugin({analyzerMode:"static"}));
 }
 
 export default config;
