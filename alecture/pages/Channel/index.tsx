@@ -27,11 +27,17 @@ const Channel: FC = () => {
   const [showInviteChannelModal ,setShowInviteChannelModal] = useState(false);
   const {data: channelData} = useSWR<IChannel>(`http://localhost:3095/api/workspaces/${workspace}/channels/${channel}`,fetcher);
 
+  // 옵티미스틱 UI 는 서버에 가기전에 바로 미리 보여준다. 
+  // 💡 revalidate() 현재로써는 mutate()를 해주면 순서가 정렬됨
+  // 0초 A: 안녕~(optimistic UI)
+  // 1초 B: 안녕~
+  // 2초 A: 안녕~(실제서버)
+
   // 과거 채팅리스트에서 채팅을 치면 최신목록으로 바로 스크롤을 내려줄려면 ref를
   // 이 컴포넌트에서 props로 내려줘야하기 때문에 forwardRef를 사용해서 props로 넘겨준다
   // 💡 HTML 엘리먼트가 아닌 React 컴포넌트에서 ref prop을 사용하려면 React에서 제공하는 forwardRef()라는 함수를 사용해야 합니다
   const scrollbarRef = useRef<Scrollbars>(null);
-  const bottomRef = useRef(null);
+  
 
     // 맴버 데이터
     const { data: channelMembersData } = useSWR<IUser[]>(

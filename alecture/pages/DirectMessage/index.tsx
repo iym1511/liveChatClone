@@ -29,7 +29,6 @@ const DirectMessage = () => {
   // 이 컴포넌트에서 props로 내려줘야하기 때문에 forwardRef를 사용해서 props로 넘겨준다
   // 💡 HTML 엘리먼트가 아닌 React 컴포넌트에서 ref prop을 사용하려면 React에서 제공하는 forwardRef()라는 함수를 사용해야 합니다
   const scrollbarRef = useRef<Scrollbars>(null);
-  const bottomRef = useRef(null);
 
   // 채팅 받아오는곳 (setSize : 페이지수를 바꿔줌)
   // useSWRInfinite를 쓰면 [{id:1},{id:2},{id:3},{id:4}] 1차원배열이 [[{id:1},{id:2}],[{id:3},{id:4}]] 2차원배열이 된다.
