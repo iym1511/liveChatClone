@@ -11,8 +11,10 @@ interface Props {
   data : (IDM | IChat);
 }
 
+// 개발용일때는 localhost, 배포할때는 slecat
+const BACK_URL = process.env.NODE_ENV == 'development' ? 'http://localhost:3095' : 'http://sleact.nodebird.com';
 const Chat: VFC<Props> = ({ data }) => {
-  const { workspace } = useParams<{ workspace: string }>();
+  const { workspace } = useParams<{ workspace: string , channel: string}>();
   const user = 'Sender' in data ? data.Sender : data.User;
 
   // @[제로초1](7)
@@ -23,7 +25,9 @@ const Chat: VFC<Props> = ({ data }) => {
 
   // useMemo (값을 캐싱)
   // props가 똑같으면 부모컴포넌트는 바껴도 자식컴포넌트는 안바뀐다 (리랜더링 안댐)
-  const result = useMemo(() => regexifyString({
+  const result = useMemo(() => data.content.startsWith('uploads/') ? ( // 텍스트가 uploads\\ 로 시작하면 img
+    <img src={`${BACK_URL}/${data.content}`} style={{maxHeight:200}} /> 
+  ) : (regexifyString({
     input: data.content,
     pattern: /@\[(.+?)]\((\d+?)\)|\n/g, // 줄바꿈도 구현되어 있음
     // 정규식에 매칭되는것이 걸림
@@ -39,7 +43,7 @@ const Chat: VFC<Props> = ({ data }) => {
       }
       return <br key={index} />; // 줄바꾸기
     },
-  }),[data.content]);
+  })),[data.content]);
 
   return (  
     <ChatWrapper>

@@ -1,6 +1,6 @@
 import Workspace from '@layouts/Workspace';
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { Container, Header } from '@pages/Channel/style';
+import { Container, DragOver, Header } from '@pages/Channel/style';
 import ChatList from '@components/ChatList';
 import useInput from '@hooks/useInput';
 import ChatBox from '@components/ChatBox';
@@ -24,10 +24,15 @@ const Channel: FC = () => {
   const [chat, onChangeChat, setChat] = useInput('');
   const [chatAlert, setChatAlert] = useState(false);
   const [socket] = useSocket(workspace);
-  const [showInviteChannelModal ,setShowInviteChannelModal] = useState(false);
-  const {data: channelData} = useSWR<IChannel>(`http://localhost:3095/api/workspaces/${workspace}/channels/${channel}`,fetcher);
+  const [showInviteChannelModal, setShowInviteChannelModal] = useState(false);
+  const { data: channelData } = useSWR<IChannel>(
+    `http://localhost:3095/api/workspaces/${workspace}/channels/${channel}`,
+    fetcher,
+  );
+  // 이미지 드래그엔 드롭
+  const [dragOver, setDragOver] = useState(false);
 
-  // 옵티미스틱 UI 는 서버에 가기전에 바로 미리 보여준다. 
+  // 옵티미스틱 UI 는 서버에 가기전에 바로 미리 보여준다.
   // 💡 revalidate() 현재로써는 mutate()를 해주면 순서가 정렬됨
   // 0초 A: 안녕~(optimistic UI)
   // 1초 B: 안녕~
@@ -37,13 +42,12 @@ const Channel: FC = () => {
   // 이 컴포넌트에서 props로 내려줘야하기 때문에 forwardRef를 사용해서 props로 넘겨준다
   // 💡 HTML 엘리먼트가 아닌 React 컴포넌트에서 ref prop을 사용하려면 React에서 제공하는 forwardRef()라는 함수를 사용해야 합니다
   const scrollbarRef = useRef<Scrollbars>(null);
-  
 
-    // 맴버 데이터
-    const { data: channelMembersData } = useSWR<IUser[]>(
-      myData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
-      fetcher,
-    );
+  // 맴버 데이터
+  const { data: channelMembersData } = useSWR<IUser[]>(
+    myData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
+    fetcher,
+  );
 
   // 채팅 받아오는곳 (setSize : 페이지수를 바꿔줌)
   // useSWRInfinite를 쓰면 [{id:1},{id:2},{id:3},{id:4}] 1차원배열이 [[{id:1},{id:2}],[{id:3},{id:4}]] 2차원배열이 된다.
@@ -52,7 +56,8 @@ const Channel: FC = () => {
     mutate: mutateChat,
     setSize,
   } = useSWRInfinite<IChat[]>(
-    (index) => `http://localhost:3095/api/workspaces/${workspace}/channels/${channel}/chats?perPage=20&page=${index + 1}`,
+    (index) =>
+      `http://localhost:3095/api/workspaces/${workspace}/channels/${channel}/chats?perPage=20&page=${index + 1}`,
     fetcher,
   );
 
@@ -116,7 +121,8 @@ const Channel: FC = () => {
   const onMessage = useCallback(
     (data: IChat) => {
       // myData.id !== Number(id) 내 채팅이 아닌것의 조건을 빼버리면 내 메시지가 두번 출력되는 현상 발생
-      if (data.Channel.name === channel && data.UserId !== myData?.id) {
+      // ++ 이미지 드래그엔 드롭 / 추가조건 : 내가 보낸 이미지는 허용
+      if ((data.Channel.name === channel && data.content.startsWith('uploads\\')) || data.UserId !== myData?.id) {
         mutateChat((chatData) => {
           chatData?.[0].unshift(data); // 가장 최신 배열에 가장 최신으로 데이터를 넣기 unshift: 맨앞push
           return chatData;
@@ -150,6 +156,65 @@ const Channel: FC = () => {
     }, 100);
   };
 
+  // 사진 선택 버튼
+  const onChangeFile = useCallback((e) => {
+    e.preventDefault();
+    console.log(e);
+    const formData = new FormData();
+    if (e.target.files) {
+      // Use DataTransferItemList interface to access the file(s)
+      for (let i = 0; i < e.target.files.length; i++) {
+        // If dropped items aren't files, reject them
+        if (e.target.files[i].kind === 'file') {
+          const file = e.target.files[i].getAsFile();
+          console.log(e, '.... file[' + i + '].name = ' + file.name);
+          formData.append('image', file);
+        }
+      }
+      axios.post(`/api/workspaces/${workspace}/channels/${channel}/images`, formData).then(() => {
+        setDragOver(false);
+        localStorage.setItem(`${workspace}-${channel}`, new Date().getTime().toString());
+      });
+    }
+  },[]);
+
+  const onDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      console.log(e);
+      const formData = new FormData();
+      if (e.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (let i = 0; i < e.dataTransfer.items.length; i++) {
+          // If dropped items aren't files, reject them
+          console.log(e.dataTransfer.items[i]);
+          if (e.dataTransfer.items[i].kind === 'file') {
+            const file = e.dataTransfer.items[i].getAsFile();
+            console.log(e, '.... file[' + i + '].name = ' + file.name);
+            formData.append('image', file);
+          }
+        }
+      } else {
+        // Use DataTransfer interface to access the file(s)
+        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+          console.log(e, '... file[' + i + '].name = ' + e.dataTransfer.files[i].name);
+          formData.append('image', e.dataTransfer.files[i]);
+        }
+      }
+      axios.post(`/api/workspaces/${workspace}/channels/${channel}/images`, formData).then(() => {
+        setDragOver(false);
+        localStorage.setItem(`${workspace}-${channel}`, new Date().getTime().toString());
+      });
+    },
+    [workspace, channel],
+  );
+
+  const onDragOver = useCallback((e) => {
+    e.preventDefault();
+    console.log(e);
+    setDragOver(true);
+  }, []);
+
   useEffect(() => {
     socket?.on('dm', onMessage);
     return () => {
@@ -167,11 +232,11 @@ const Channel: FC = () => {
 
   const onClickInviteChannel = useCallback(() => {
     setShowInviteChannelModal(true);
-  },[]);
+  }, []);
 
   const onCloseModal = useCallback(() => {
     setShowInviteChannelModal(false);
-  },[])
+  }, []);
 
   // 로딩
   if (!myData || !myData) {
@@ -179,10 +244,11 @@ const Channel: FC = () => {
   }
 
   return (
-    <Container>
+    // 이미지 드래그엔 드롭
+    <Container onDrop={onDrop} onDragOver={onDragOver}>
       <Header>
         <span>#{channel}</span>
-        <div className='header-right'>
+        <div className="header-right">
           <span>{channelMembersData?.length}</span>
           <button
             onClick={onClickInviteChannel}
@@ -191,7 +257,7 @@ const Channel: FC = () => {
             data-sk="tooltip_parent"
             type="button"
           ></button>
-          <i className='c-icon p-ia__view_header__button_icon c-icon--add-user' aria-hidden="true" />
+          <i className="c-icon p-ia__view_header__button_icon c-icon--add-user" aria-hidden="true" />
         </div>
       </Header>
       {/* 컴포넌트 위치를 미리 지정해도 좋다. */}
@@ -206,11 +272,13 @@ const Channel: FC = () => {
       />
       {chatAlert && <ChatAlert onClick={newChatClick}>새로운 채팅이 있습니다!</ChatAlert>}
       <ChatBox chat={chat} onChangeChat={onChangeChat} onSubmitForm={onSubmitForm} />
-      <InviteChannelModal 
+      <InviteChannelModal
         show={showInviteChannelModal}
         onCloseModal={onCloseModal}
         setShowInviteChannelModal={setShowInviteChannelModal}
       />
+      <input type="file" multiple onChange={onChangeFile}/>
+      {dragOver && <DragOver>업로드!</DragOver>}
     </Container>
   );
 };

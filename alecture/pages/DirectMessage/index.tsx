@@ -15,6 +15,7 @@ import axios from 'axios';
 import makeSection from '@utils/makeSection';
 import Scrollbars from 'react-custom-scrollbars';
 import useSocket from '@hooks/useSocket';
+import { DragOver } from '@pages/Channel/style';
 
 const DirectMessage = () => {
   const { workspace, id } = useParams<{ workspace: string; id: string }>();
@@ -24,6 +25,8 @@ const DirectMessage = () => {
   const [chat, onChangeChat, setChat] = useInput('');
   const [chatAlert, setChatAlert] = useState(false);
   const [socket] = useSocket(workspace);
+  // 이미지 드래그 엔 드롭
+  const [dragOver, setDragOver] = useState(false);
 
   // 과거 채팅리스트에서 채팅을 치면 최신목록으로 바로 스크롤을 내려줄려면 ref를
   // 이 컴포넌트에서 props로 내려줘야하기 때문에 forwardRef를 사용해서 props로 넘겨준다
@@ -150,6 +153,66 @@ const DirectMessage = () => {
     }
   }, [chatData]);
 
+    // 사진 선택 버튼
+    const onChangeFile = useCallback((e) => {
+      e.preventDefault();
+      console.log(e);
+      const formData = new FormData();
+      if (e.target.files) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (let i = 0; i < e.target.files.length; i++) {
+          // If dropped items aren't files, reject them
+          if (e.target.files[i].kind === 'file') {
+            const file = e.target.files[i].getAsFile();
+            console.log(e, '.... file[' + i + '].name = ' + file.name);
+            formData.append('image', file);
+          }
+        }
+        axios.post(`/api/workspaces/${workspace}/dms/${id}/images`, formData).then(()=> {
+          setDragOver(false);
+          mutateChat(); // 데이터 정리? 정렬?
+        });
+      }
+    },[]);
+
+    const onDrop = useCallback(
+      (e) => {
+        e.preventDefault();
+        console.log(e);
+        const formData = new FormData();
+        if (e.dataTransfer.items) {
+          // Use DataTransferItemList interface to access the file(s)
+          for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            // If dropped items aren't files, reject them
+            if (e.dataTransfer.items[i].kind === 'file') {
+              const file = e.dataTransfer.items[i].getAsFile();
+              console.log('... file[' + i + '].name = ' + file.name);
+              formData.append('image', file);
+            }
+          }
+        } else {
+          // Use DataTransfer interface to access the file(s)
+          for (let i = 0; i < e.dataTransfer.files.length; i++) {
+            console.log('... file[' + i + '].name = ' + e.dataTransfer.files[i].name);
+            formData.append('image', e.dataTransfer.files[i]);
+          }
+        }
+        axios.post(`/api/workspaces/${workspace}/dms/${id}/images`, formData).then(() => {
+          setDragOver(false);
+          localStorage.setItem(`${workspace}-${id}`, new Date().getTime().toString());
+          mutateChat();
+        });
+      },
+      [workspace, id, mutateChat],
+    );
+
+  // 업로드css화면 드래그 하는동안 보이게하는 함수
+  const onDragOver = useCallback((e) => {
+    e.preventDefault();
+    console.log(e);
+    setDragOver(true);
+  },[])
+
 
   // 로딩
   if (!userData || !myData) {
@@ -157,7 +220,8 @@ const DirectMessage = () => {
   }
 
   return (
-    <Container>
+    // 이미지 드래그엔  드롭
+    <Container onDrop={onDrop} onDragOver={onDragOver}>
       <Header>
         <img src={gravator.url(userData.email, { s: '24px', d: 'retro' })} alt={userData.nickname}></img>
         <span>{userData.nickname}</span>
@@ -178,6 +242,8 @@ const DirectMessage = () => {
         </ChatAlert>
       )}
       <ChatBox chat={chat} onChangeChat={onChangeChat} onSubmitForm={onSubmitForm} />
+      <input type="file" multiple onChange={onChangeFile}/>
+      {dragOver && <DragOver>업로드!</DragOver>}
     </Container>
   );
 };
