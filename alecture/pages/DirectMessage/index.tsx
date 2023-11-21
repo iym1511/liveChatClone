@@ -72,6 +72,7 @@ const DirectMessage = () => {
           return prevChatData;
         }, false) // 옵티미스틱 UI 할땐 이부분이 항상 false
           .then(() => {
+            localStorage.setItem(`${workspace}-${id}`, new Date().getTime().toString());
             setChat(''); // 버튼클릭 시 기존 채팅지우기
             scrollbarRef.current?.scrollToBottom(); // 채팅 첬을때 맨 아래로
           });
@@ -175,6 +176,12 @@ const DirectMessage = () => {
       }
     },[]);
 
+  // 채팅들 들어갈때마다 현재시각 기록 (메세지 여기까지 읽었다는 증거)
+  useEffect(() => {
+    localStorage.setItem(`${workspace}-${id}`, new Date().getTime().toString());
+  },[workspace, id])
+
+    // 이미지 드롭 (mdn 에있는 코드 그대로 사용)
     const onDrop = useCallback(
       (e) => {
         e.preventDefault();

@@ -25,7 +25,7 @@ const Chat: VFC<Props> = ({ data }) => {
 
   // useMemo (값을 캐싱)
   // props가 똑같으면 부모컴포넌트는 바껴도 자식컴포넌트는 안바뀐다 (리랜더링 안댐)
-  const result = useMemo(() => data.content.startsWith('uploads/') ? ( // 텍스트가 uploads\\ 로 시작하면 img
+  const result = useMemo(() => data.content.startsWith('uploads/') ? ( // 텍스트가 uploads/ 로 시작하면 img
     <img src={`${BACK_URL}/${data.content}`} style={{maxHeight:200}} /> 
   ) : (regexifyString({
     input: data.content,
